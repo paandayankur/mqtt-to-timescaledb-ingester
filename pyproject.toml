@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "esphome-mqtt-timescaledb-ingestor"
+version = "0.2.0" # Bump the version for the new feature!
+description = "A robust Python service to ingest ESPHome MQTT data into a TimescaleDB multi-table schema."
+authors = ["Ankur Kumar Pandey <measure@i-dacs.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://i-dacs.com"
+repository = "https://github.com/paandayankur/mqtt-to-timescaledb-ingester"
+keywords = ["esphome", "mqtt", "timescaledb", "iot", "database", "ingestor"]
+
+[tool.poetry.dependencies]
+python = ">=3.7"
+paho-mqtt = "^1.6.1"
+psycopg2-binary = "^2.9.1"
+typer = {extras = ["all"], version = "^0.9.0"} # Add Typer
+
+[tool.poetry.scripts]
+# Update this entry point to point to the Typer app
+mqtt-ingestor = "esphome_mqtt_timescaledb_ingestor.ingestor:app"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

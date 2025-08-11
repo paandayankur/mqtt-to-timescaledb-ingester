@@ -1,157 +1,71 @@
-# ESPHome MQTT to TimescaleDB Multi-Table Ingestor 🚀
+# ESPHome MQTT to TimescaleDB Ingestor
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+A robust Python service that listens for ESPHome data on an MQTT broker and persists it into a structured, multi-table TimescaleDB database.
 
-A robust and high-performance Python service designed to bridge the gap between your ESPHome devices and a powerful TimescaleDB database.
+This project is designed to work with the standard ESPHome and Home Assistant discovery protocols, handling various message types including device discovery, entity configurations, real-time state updates, and commands.
 
-This script listens to a wide array of MQTT topics, intelligently decodes different message types (from device discovery to real-time state changes), and persists them into a structured, multi-table database schema. It's built for reliability and performance, using a multi-threaded, queue-based architecture to handle high volumes of IoT data without missing a beat.
+## Features
 
----
+* Connects to an MQTT broker and subscribes to all relevant ESPHome and Home Assistant topics.
+* Intelligently processes and stores five distinct types of messages.
+* Automatically creates the necessary database tables on the first run.
+* Uses a multi-threaded, queue-based architecture for high performance and resilience.
+* Supports intelligent batch processing for efficient database writes.
 
-## 🏛️ Architecture Overview
+## Installation
 
-The ingestor acts as a central hub, listening to all communication from your ESPHome devices via an MQTT broker and organizing it neatly into your database.
+Install the package directly from PyPI:
 
-```text
-┌───────────┐      MQTT      ┌─────────────────┐      ┌──────────────────────────────┐
-│           ├───── Broker ───►│                 │      │ ┌──────────────────────────┐ │
-│ ESPHome   │                │ Python Ingestor ├─────►│ │     discovery_data       │ │
-│  Devices  │                │  (This Script)  │      │ │    (Device Metadata)     │ │
-│           │                │                 │      │ ├──────────────────────────┤ │
-└───────────┘                └─────────────────┘      │ │          entity          │ │
-                                                      │ │   (Component Config)     │ │
-                                                      │ ├──────────────────────────┤ │
-                                                      │ │      device_status       │ │
-                                                      │ │   (Online/Offline Log)   │ │
-                                                      │ ├──────────────────────────┤ │
-                                                      │ │          command         │ │
-                                                      │ │   (Sent Commands Log)    │ │
-                                                      │ ├──────────────────────────┤ │
-                                                      │ │ esphome_data (Hypertable)│ │
-                                                      │ │    (Real-time State)     │ │
-                                                      │ └──────────────────────────┘ │
-                                                      └──────────────────────────────┘
-                                                          TimescaleDB Database
+```bash
+pip install esphome-mqtt-timescaledb-ingestor
 ```
 
----
+## Usage
 
-## ✨ Key Features
+This package includes an interactive command-line interface (CLI) to help you get started.
 
-* **Comprehensive Data Capture**: Ingests five distinct types of MQTT messages for a complete picture of your IoT ecosystem.
-* **Structured Multi-Table Storage**: Organizes data logically across five different SQL tables, separating metadata from time-series state data.
-* **TimescaleDB Hypertable Support**: Automatically creates and uses a TimescaleDB hypertable for efficient querying of real-time sensor data.
-* **High Performance**: Utilizes a multi-threaded, queue-based architecture to decouple message reception from database writing, preventing data loss under high load.
-* **Batch Processing**: Intelligently batches time-series data for efficient `INSERT` operations, significantly improving database performance.
-* **Automatic Schema Setup**: Creates all necessary tables on its first run, simplifying deployment.
-* **Resilient by Design**: Handles database and MQTT connection errors gracefully, with automatic reconnection attempts.
-* **Easy Configuration**: All connection details and performance parameters are centralized at the top of the script for easy modification.
+### 1. Initial Configuration
 
----
+After installing the package, run the `configure` command. This will launch an interactive setup wizard that will ask for your MQTT and database credentials and save them to a configuration file.
 
-## 🗃️ Database Schema
+```bash
+mqtt-ingestor configure
+```
 
-The script automatically creates and manages the following five tables:
+You will be prompted for the following:
+-   MQTT Broker Host
+-   MQTT Broker Port
+-   MQTT Username & Password
+-   Database Host
+-   Database Port
+-   Database Name
+-   Database User & Password
 
-1.  **`discovery_data`**
-    * Stores device metadata when an ESPHome device announces itself on the network.
-    * **Columns**: `time`, `device_name` (Primary Key), `ip_address`, `mac_address`, `version`, `platform`, `board`, `network`, `raw_payload`.
+### 2. Start the Ingestor Service
 
-2.  **`entity`**
-    * Stores the configuration for each component (sensor, switch, etc.) as discovered via the Home Assistant discovery protocol.
-    * **Columns**: `time`, `unique_id` (Primary Key), `device_name`, `component_type`, `name`, `state_topic`, `command_topic`, `raw_payload`.
+Once you have configured your credentials, you can start the ingestor service:
 
-3.  **`device_status`**
-    * An audit trail of when devices connect and disconnect from the MQTT broker.
-    * **Columns**: `time`, `device_name`, `status` ('online' or 'offline'), `raw_payload`.
+```bash
+mqtt-ingestor start
+```
 
-4.  **`command`**
-    * A log of all commands sent to devices through their MQTT command topics.
-    * **Columns**: `time`, `device_id`, `component_id`, `command`, `raw_payload`.
+The service will load your saved configuration and begin listening for messages.
 
-5.  **`esphome_data`** (TimescaleDB Hypertable)
-    * The core time-series table storing all real-time state updates from device components.
-    * **Columns**: `time`, `device_id`, `sensor_name`, `value`, `attributes`.
+## Testing
 
----
+To run the tests, clone the repository, install the development dependencies, and run pytest:
 
-## 🔧 Prerequisites
+```bash
+git clone [https://github.com/paandayankur/mqtt-to-timescaledb-ingester.git](https://github.com/paandayankur/mqtt-to-timescaledb-ingester.git)
+cd mqtt-to-timescaledb-ingester
+poetry install --with dev
+poetry run pytest
+```
 
-Before running the script, ensure you have the following:
+## Contributing
 
-1.  **Python 3.7+**
-2.  **A running MQTT Broker** (e.g., Mosquitto).
-3.  **A running PostgreSQL server with the TimescaleDB extension enabled.**
-4.  **Required Python libraries**:
-    ```bash
-    pip install paho-mqtt psycopg2-binary
-    ```
+Contributions are welcome! Please feel free to open an issue or submit a pull request for any improvements or bug fixes.
 
----
+## License
 
-## 🚀 Setup & Usage
-
-1.  **Clone the Repository / Download the Script**
-    * Save the script as `mqtt_ingestor.py` (or a similar name) on your server.
-
-2.  **Configure the Script**
-    * Open the script and edit the configuration variables at the top of the file to match your environment:
-        * `MQTT_BROKER_HOST`, `MQTT_BROKER_PORT`, `MQTT_USERNAME`, `MQTT_PASSWORD`
-        * `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
-    * Adjust `BATCH_SIZE` and `FLUSH_INTERVAL` if needed for performance tuning.
-
-3.  **Set Up Database Permissions**
-    * Ensure the `DB_USER` you configured has permissions to `CREATE` tables and `INSERT` data into the `DB_NAME` database.
-
-4.  **Run the Script**
-    * Execute the script from your terminal:
-    ```bash
-    python3 mqtt_ingestor.py
-    ```
-    * On the first run, it will connect to the database and create the five tables if they don't exist. It will then connect to the MQTT broker and begin ingesting data.
-
-### Running as a Systemd Service (Recommended)
-
-For continuous, reliable operation, it's best to run this script as a systemd service on Linux.
-
-1.  Create a service file:
-    ```bash
-    sudo nano /etc/systemd/system/mqtt-ingestor.service
-    ```
-
-2.  Paste the following configuration, making sure to update the paths and username:
-    ```ini
-    [Unit]
-    Description=ESPHome MQTT to TimescaleDB Ingestor
-    After=network.target
-
-    [Service]
-    User=your_linux_user
-    Group=your_linux_group
-    WorkingDirectory=/path/to/your/script
-    ExecStart=/usr/bin/python3 /path/to/your/script/mqtt_ingestor.py
-    Restart=always
-    RestartSec=5
-
-    [Install]
-    WantedBy=multi-user.target
-    ```
-
-3.  Enable and start the service:
-    ```bash
-    sudo systemctl daemon-reload
-    sudo systemctl enable mqtt-ingestor.service
-    sudo systemctl start mqtt-ingestor.service
-    ```
-
-4.  Check its status:
-    ```bash
-    sudo systemctl status mqtt-ingestor.service
-    ```
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+This project is licensed under the MIT License. See the `LICENSE` file for more details.
