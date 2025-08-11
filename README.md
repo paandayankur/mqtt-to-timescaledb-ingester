@@ -7,31 +7,36 @@ A robust and high-performance Python service designed to bridge the gap between 
 
 This script listens to a wide array of MQTT topics, intelligently decodes different message types (from device discovery to real-time state changes), and persists them into a structured, multi-table database schema. It's built for reliability and performance, using a multi-threaded, queue-based architecture to handle high volumes of IoT data without missing a beat.
 
+---
+
 ## 🏛️ Architecture Overview
 
 The ingestor acts as a central hub, listening to all communication from your ESPHome devices via an MQTT broker and organizing it neatly into your database.
 
-
-
 ```text
-                                                     ┌──────────────────────────┐
-                                                     │   discovery_data         │
-                                                     │ (Device Metadata)        │
-                                                     ├──────────────────────────┤
-                               ┌──────────────────┐  │   entity                 │
-                               │                  │  │ (Component Config)       │
-┌──────────────┐   MQTT        │  Python Ingestor │  ├──────────────────────────┤
-│ ESPHome      ├──────────────►│                  ├─►│   device_status          │
-│ Devices      │   Broker      │  (This Script)   │  │ (Online/Offline Log)     │
-└──────────────┘               │                  │  ├──────────────────────────┤
-                               └──────────────────┘  │   command                │
-                                                     │ (Sent Commands Log)      │
-                                                     ├──────────────────────────┤
-                                                     │   esphome_data (Hypertable)│
-                                                     │ (Real-time State)        │
-                                                     └──────────────────────────┘
+┌───────────┐      MQTT      ┌─────────────────┐      ┌──────────────────────────────┐
+│           ├───── Broker ───►│                 │      │ ┌──────────────────────────┐ │
+│ ESPHome   │                │ Python Ingestor ├─────►│ │     discovery_data       │ │
+│  Devices  │                │  (This Script)  │      │ │    (Device Metadata)     │ │
+│           │                │                 │      │ ├──────────────────────────┤ │
+└───────────┘                └─────────────────┘      │ │          entity          │ │
+                                                      │ │   (Component Config)     │ │
+                                                      │ ├──────────────────────────┤ │
+                                                      │ │      device_status       │ │
+                                                      │ │   (Online/Offline Log)   │ │
+                                                      │ ├──────────────────────────┤ │
+                                                      │ │          command         │ │
+                                                      │ │   (Sent Commands Log)    │ │
+                                                      │ ├──────────────────────────┤ │
+                                                      │ │ esphome_data (Hypertable)│ │
+                                                      │ │    (Real-time State)     │ │
+                                                      │ └──────────────────────────┘ │
+                                                      └──────────────────────────────┘
+                                                          TimescaleDB Database
+```
 
-***
+---
+
 ## ✨ Key Features
 
 * **Comprehensive Data Capture**: Ingests five distinct types of MQTT messages for a complete picture of your IoT ecosystem.
@@ -43,7 +48,7 @@ The ingestor acts as a central hub, listening to all communication from your ESP
 * **Resilient by Design**: Handles database and MQTT connection errors gracefully, with automatic reconnection attempts.
 * **Easy Configuration**: All connection details and performance parameters are centralized at the top of the script for easy modification.
 
-***
+---
 
 ## 🗃️ Database Schema
 
@@ -69,7 +74,7 @@ The script automatically creates and manages the following five tables:
     * The core time-series table storing all real-time state updates from device components.
     * **Columns**: `time`, `device_id`, `sensor_name`, `value`, `attributes`.
 
-***
+---
 
 ## 🔧 Prerequisites
 
@@ -83,12 +88,12 @@ Before running the script, ensure you have the following:
     pip install paho-mqtt psycopg2-binary
     ```
 
-***
+---
 
 ## 🚀 Setup & Usage
 
 1.  **Clone the Repository / Download the Script**
-    * Save the script as `python_mqtt_to_timescale_multi_table.py` on your server.
+    * Save the script as `mqtt_ingestor.py` (or a similar name) on your server.
 
 2.  **Configure the Script**
     * Open the script and edit the configuration variables at the top of the file to match your environment:
@@ -102,7 +107,7 @@ Before running the script, ensure you have the following:
 4.  **Run the Script**
     * Execute the script from your terminal:
     ```bash
-    python python_mqtt_to_timescale_multi_table.py
+    python3 mqtt_ingestor.py
     ```
     * On the first run, it will connect to the database and create the five tables if they don't exist. It will then connect to the MQTT broker and begin ingesting data.
 
@@ -118,15 +123,16 @@ For continuous, reliable operation, it's best to run this script as a systemd se
 2.  Paste the following configuration, making sure to update the paths and username:
     ```ini
     [Unit]
-    Description=MQTT to TimescaleDB Ingestor Service
+    Description=ESPHome MQTT to TimescaleDB Ingestor
     After=network.target
 
     [Service]
     User=your_linux_user
     Group=your_linux_group
     WorkingDirectory=/path/to/your/script
-    ExecStart=/usr/bin/python3 /path/to/your/script/python_mqtt_to_timescale_multi_table.py
+    ExecStart=/usr/bin/python3 /path/to/your/script/mqtt_ingestor.py
     Restart=always
+    RestartSec=5
 
     [Install]
     WantedBy=multi-user.target
@@ -144,8 +150,8 @@ For continuous, reliable operation, it's best to run this script as a systemd se
     sudo systemctl status mqtt-ingestor.service
     ```
 
-***
+---
 
 ## 📄 License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is licensed under the MIT License. See the `LICENSE` file for details.
