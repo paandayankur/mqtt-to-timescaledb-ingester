@@ -13,27 +13,23 @@ The ingestor acts as a central hub, listening to all communication from your ESP
 
 
 
-                                                 ┌──────────────────────────┐
-                                                 │   discovery_data         │
-                                                 │ (Device Metadata)        │
-                                                 ├──────────────────────────┤
-                           ┌──────────────────┐  │   entity                 │
-                           │                  │  │ (Component Config)       │
-
+```text
+                                                     ┌──────────────────────────┐
+                                                     │   discovery_data         │
+                                                     │ (Device Metadata)        │
+                                                     ├──────────────────────────┤
+                               ┌──────────────────┐  │   entity                 │
+                               │                  │  │ (Component Config)       │
 ┌──────────────┐   MQTT        │  Python Ingestor │  ├──────────────────────────┤
 │ ESPHome      ├──────────────►│                  ├─►│   device_status          │
 │ Devices      │   Broker      │  (This Script)   │  │ (Online/Offline Log)     │
 └──────────────┘               │                  │  ├──────────────────────────┤
-└──────────────────┘  │   command                │
-│ (Sent Commands Log)      │
-├──────────────────────────┤
-│   esphome_data (Hypertable)│
-│ (Real-time State)        │
-└──────────────────────────┘
-
-
-***
-
+                               └──────────────────┘  │   command                │
+                                                     │ (Sent Commands Log)      │
+                                                     ├──────────────────────────┤
+                                                     │   esphome_data (Hypertable)│
+                                                     │ (Real-time State)        │
+                                                     └──────────────────────────┘
 ## ✨ Key Features
 
 * **Comprehensive Data Capture**: Ingests five distinct types of MQTT messages for a complete picture of your IoT ecosystem.
