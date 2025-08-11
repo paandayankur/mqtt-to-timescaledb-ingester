@@ -30,6 +30,8 @@ The ingestor acts as a central hub, listening to all communication from your ESP
                                                      │   esphome_data (Hypertable)│
                                                      │ (Real-time State)        │
                                                      └──────────────────────────┘
+
+***
 ## ✨ Key Features
 
 * **Comprehensive Data Capture**: Ingests five distinct types of MQTT messages for a complete picture of your IoT ecosystem.
