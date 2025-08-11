@@ -42,3 +42,55 @@ Clone the repository or download the `generator.py` script to your local machine
 ```bash
 git clone <your-repository-url>
 cd <your-repository-name>
+
+
+2. Usage
+The script can be run in two ways: interactively or with command-line arguments.
+
+Interactive Mode (Recommended for first-time use)
+Simply run the script without any arguments. It will prompt you to enter the necessary credentials.
+
+Bash
+
+python generator.py
+You will be asked for your Wi-Fi SSID/password and MQTT broker details. A new file, like esphome-device-a1b2c3d4e5f6.yaml, will be created, and the default config action will be run.
+
+Command-Line Mode (For automation and power users)
+You can provide all credentials and specify an action directly via command-line flags. This is useful for scripting deployments.
+
+Bash
+
+python generator.py \
+  --wifi-ssid "YourWiFi_SSID" \
+  --wifi-password "YourWiFiPassword" \
+  --mqtt-broker "192.168.1.100" \
+  --mqtt-port "1883" \
+  --mqtt-user "mqtt_username" \
+  --mqtt-pass "mqtt_password" \
+  --action "run"
+Available Actions (--action flag)
+config (Default): Creates the YAML file and validates it with esphome config.
+
+compile: Creates the YAML file and compiles the firmware with esphome compile.
+
+run: Creates the YAML file, compiles, and uploads it to the device with esphome run.
+
+⚙️ Customization
+This script is built around a specific hardware configuration defined in the generate_yaml_config function. If your hardware is different (e.g., different GPIO pins, another type of sensor, or a different board), you can easily customize it.
+
+Open generator.py in your favorite editor.
+
+Navigate to the generate_yaml_config function.
+
+Modify the YAML f-string:
+
+Change board: esp32-s3-devkitc-1 to match your board.
+
+Update the pin numbers for your GPIO switches or UART configuration.
+
+Add or remove components (sensors, switches, etc.) as needed.
+
+Remember to generate unique IDs using generate_safe_name() for any new entities you add!
+
+📄 License
+This project is licensed under the MIT License. See the LICENSE file for details.
